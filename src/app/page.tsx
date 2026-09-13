@@ -1,3 +1,4 @@
+import { MatrixRain } from "@/components/chrome/MatrixRain";
 import { Player } from "@/components/chrome/Player";
 import { ScanlineOverlay } from "@/components/chrome/ScanlineOverlay";
 import { TopBar } from "@/components/chrome/TopBar";
@@ -72,6 +73,7 @@ export default function Home() {
 
       <ZigzagRail />
       <ScanlineOverlay />
+      <MatrixRain />
       </PlayerProvider>
     </div>
   );

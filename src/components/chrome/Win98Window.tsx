@@ -39,7 +39,7 @@ export function Win98Window({
     <section
       id={id}
       className={cn(
-        "border shadow-hard",
+        "group border shadow-hard",
         isBlood ? "border-blood bg-void-deep" : "border-chrome bg-void",
         className,
       )}
@@ -51,7 +51,7 @@ export function Win98Window({
           isBlood ? "border-blood bg-blood" : "border-chrome bg-chrome",
         )}
       >
-        <TitleTag className="min-w-0 flex-1 truncate font-pixel text-[11px] leading-none tracking-[0.08em] text-void-deep uppercase">
+        <TitleTag className="min-w-0 flex-1 truncate font-pixel text-[11px] leading-none tracking-[0.08em] text-void-deep uppercase transition-[text-shadow] group-hover:[text-shadow:2px_0_0_var(--color-blood),-2px_0_0_var(--color-cyan)]">
           {typeof title === "string" ? title : <T value={title} />}
           {titleJp ? (
             <span className="ml-2 font-jp text-[11px] normal-case">{titleJp}</span>

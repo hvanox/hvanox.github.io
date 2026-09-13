@@ -26,6 +26,9 @@ type YTPlayerInstance = {
   playVideo: () => void;
   pauseVideo: () => void;
   stopVideo: () => void;
+  mute: () => void;
+  unMute: () => void;
+  isMuted: () => boolean;
   destroy: () => void;
 };
 
@@ -136,6 +139,10 @@ export function Player() {
   const { track, playing, selectTrack, setPlaying } = usePlayerState();
 
   const [availability, setAvailability] = useState<Availability>("probing");
+  // Автоплей со звуком браузеры режут без жеста пользователя, немой —
+  // разрешают. Поэтому: пробуем громко, не вышло — играем немо и показываем
+  // кнопку «включи звук»; первый же клик/кейпресс по странице размьючивает.
+  const [muted, setMuted] = useState(false);
   // Гидрация: сервер и первый рендер клиента обязаны совпасть, поэтому
   // `disabled` включаем только после монтирования (кнопки до этого inert:
   // обработчики всё равно сторожат состояние).
@@ -164,9 +171,13 @@ export function Player() {
   }, []);
 
   // Рождение iframe-плеера: один раз, дальше только cue новых видео.
+  // Сразу пробуем автоплей со звуком; если браузер не дал (нет жеста) —
+  // через 2.5с уходим в немой автоплей + кнопка размьюта.
   useEffect(() => {
     let cancelled = false;
     let instance: YTPlayerInstance | null = null;
+    let played = false;
+    let watchdog = 0;
 
     loadYouTubeApi()
       .then((api) => {
@@ -185,13 +196,35 @@ export function Player() {
                 return;
               }
               setAvailability("ready");
+              // Автоплей: сначала громко — вдруг браузер разрешит
+              // (возвращающиеся посетители с историей жестов).
+              try {
+                instance?.playVideo();
+              } catch {
+                // Молча: watchdog ниже сам уйдёт в немой режим.
+              }
+              watchdog = window.setTimeout(() => {
+                if (cancelled || played) return;
+                try {
+                  instance?.mute();
+                  instance?.playVideo();
+                } catch {
+                  setAvailability("missing");
+                }
+              }, 2500);
             },
             onStateChange: (event) => {
               if (cancelled) return;
               const apiNow = (window as unknown as { YT?: YTApi }).YT;
               if (event.data === apiNow?.PlayerState.PLAYING) {
+                played = true;
                 setAvailability("ready");
                 setPlaying(true);
+                try {
+                  setMuted(instance?.isMuted() ?? false);
+                } catch {
+                  setMuted(false);
+                }
               } else {
                 setPlaying(false);
                 if (event.data === apiNow?.PlayerState.CUED) setAvailability("ready");
@@ -213,6 +246,7 @@ export function Player() {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(watchdog);
       instance?.destroy();
       playerRef.current = null;
     };
@@ -260,6 +294,41 @@ export function Player() {
       setAvailability("missing");
     }
     setPlaying(false);
+  }, [setPlaying]);
+
+  const unmute = useCallback(() => {
+    try {
+      playerRef.current?.unMute();
+      playerRef.current?.playVideo();
+    } catch {
+      setAvailability("missing");
+      return;
+    }
+    setMuted(false);
+    setPlaying(true);
+  }, [setPlaying]);
+
+  // Первый жест по странице размьючивает немой автоплей.
+  useEffect(() => {
+    const onGesture = () => {
+      try {
+        const peer = playerRef.current;
+        if (peer?.isMuted()) {
+          peer.unMute();
+          peer.playVideo();
+          setMuted(false);
+          setPlaying(true);
+        }
+      } catch {
+        // Игнорируем: транспорт всё равно доступен вручную.
+      }
+    };
+    window.addEventListener("pointerdown", onGesture);
+    window.addEventListener("keydown", onGesture);
+    return () => {
+      window.removeEventListener("pointerdown", onGesture);
+      window.removeEventListener("keydown", onGesture);
+    };
   }, [setPlaying]);
 
   return (
@@ -324,6 +393,17 @@ export function Player() {
       >
         {t(dict.player.watchOnYoutube)}: {track.artist} ↗
       </a>
+
+      {/* Немой автоплей: мигающая кнопка размьюта. */}
+      {muted && !disabled ? (
+        <button
+          type="button"
+          onClick={unmute}
+          className="animate-blink w-fit border border-acid bg-void-deep px-2 py-1 font-pixel text-[10px] tracking-[0.08em] text-acid uppercase hover:bg-acid hover:text-void-deep"
+        >
+          [ {t(dict.player.unmute)} ]
+        </button>
+      ) : null}
 
       <div>
         <p className="mb-1 font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">

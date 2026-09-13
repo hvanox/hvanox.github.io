@@ -9,7 +9,6 @@ export const dict = {
     stack: { ru: "стек", en: "stack" },
     achievements: { ru: "ачивки", en: "achievements" },
     experience: { ru: "опыт", en: "experience" },
-    shrine: { ru: "алтарь тето", en: "teto shrine" },
     contact: { ru: "контакты", en: "contact" },
   },
   header: {
@@ -87,6 +86,7 @@ export const dict = {
     tracklist: { ru: "плейлист", en: "playlist" },
     lyrics: { ru: "текст песни", en: "lyrics" },
     watchOnYoutube: { ru: "смотреть на youtube", en: "watch on youtube" },
+    unmute: { ru: "включи звук", en: "unmute" },
   },
   github: {
     repos: { ru: "публичных репо", en: "public repos" },

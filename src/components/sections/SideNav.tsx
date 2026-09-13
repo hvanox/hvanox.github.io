@@ -17,7 +17,6 @@ const items = [
   { id: "stack", label: dict.nav.stack },
   { id: "achievements", label: dict.nav.achievements },
   { id: "experience", label: dict.nav.experience },
-  { id: "shrine", label: dict.nav.shrine },
   { id: "contact", label: dict.nav.contact },
 ] as const;
 
