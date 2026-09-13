@@ -3,26 +3,87 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Square } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { usePlayerState } from "@/lib/player-state";
 import { dict } from "@/content/dict";
-import { isLocalTrack, playlist, type Track } from "@/content/playlist";
+import { playlist, watchUrl } from "@/content/playlist";
 import { cn } from "@/lib/utils";
 
 /**
- * Winamp-подобный плеер поверх плейлиста из src/content/playlist.ts.
+ * Winamp-подобный плеер поверх официальных клипов YouTube.
  *
- * Правила: никакого autoplay — звук стартует только с клика. Готовность
- * трека определяют события самого <audio> (onCanPlay/onError), а не HEAD:
- * внешние стримы не всегда отвечают на HEAD и не всегда отдают CORS.
- * Визуализатор (AnalyserNode) подключаем только для своих файлов: чужой
- * сервер без CORS-заголовков глушит звук в WebAudio-графе, поэтому стримы
- * играют напрямую, а канвас показывает статичную полосу. При
- * prefers-reduced-motion анимации нет вообще — тоже статичная полоса.
+ * Звук и картинка — iframe API: видео видно в мини-экране, просмотры
+ * капают авторам. Свой транспорт (play/pause/stop) дергает API, состояние
+ * читаем из onStateChange. Чужие аудиоданные недоступны из JS принципиально,
+ * поэтому визуализатора здесь нет — только статичная полоса; бар текста
+ * песни (LyricsBar) крутится, пока играет.
+ *
+ * Правила: никакого autoplay — всё стартует только с клика (сначала cue,
+ * play лишь по кнопке). Видео не встраивается — показываем trackUnplayable.
  */
 
-type TrackState = "probing" | "ready" | "missing";
+type YTPlayerInstance = {
+  cueVideoById: (videoId: string) => void;
+  playVideo: () => void;
+  pauseVideo: () => void;
+  stopVideo: () => void;
+  destroy: () => void;
+};
+
+type YTApi = {
+  Player: new (
+    el: HTMLElement,
+    opts: {
+      videoId: string;
+      playerVars?: Record<string, string | number>;
+      events?: {
+        onReady?: () => void;
+        onStateChange?: (event: { data: number }) => void;
+        onError?: () => void;
+      };
+    },
+  ) => YTPlayerInstance;
+  PlayerState: { PLAYING: number; CUED: number };
+};
+
+type Availability = "probing" | "ready" | "missing";
 
 const btnClass =
   "grid size-7 shrink-0 place-items-center border border-chrome bg-void text-bone transition-transform hover:border-blood hover:text-blood active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-chrome disabled:hover:text-bone";
+
+/** Скрипт iframe API грузим один раз на страницу, дальше переиспользуем. */
+let apiPromise: Promise<YTApi> | null = null;
+
+function loadYouTubeApi(): Promise<YTApi> {
+  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
+  const known = (window as unknown as { YT?: YTApi }).YT;
+  if (known?.Player) return Promise.resolve(known);
+
+  if (!apiPromise) {
+    apiPromise = new Promise<YTApi>((resolve, reject) => {
+      const win = window as unknown as {
+        YT?: YTApi;
+        onYouTubeIframeAPIReady?: () => void;
+      };
+      const prev = win.onYouTubeIframeAPIReady;
+      win.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        if (win.YT?.Player) resolve(win.YT);
+        else {
+          apiPromise = null;
+          reject(new Error("youtube api missing"));
+        }
+      };
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      tag.onerror = () => {
+        apiPromise = null;
+        reject(new Error("youtube api load failed"));
+      };
+      document.head.appendChild(tag);
+    });
+  }
+  return apiPromise;
+}
 
 /**
  * Плавающий бар текста песни над плеером. Текст крутится бегущей строкой,
@@ -33,16 +94,19 @@ const btnClass =
  * анимацию — бар становится статичным.
  */
 function LyricsBar({
-  track,
+  title,
+  artist,
+  lines,
   playing,
   label,
 }: {
-  track: Track;
+  title: string;
+  artist: string;
+  lines: string[];
   playing: boolean;
   label: string;
 }) {
-  const text =
-    track.lyrics.length > 0 ? track.lyrics.join(" ✦ ") : `${track.title} — ${track.artist}`;
+  const text = lines.length > 0 ? lines.join(" ✦ ") : `${title} — ${artist}`;
   const duration = Math.max(40, Math.round(text.length / 9));
 
   return (
@@ -69,244 +133,134 @@ function LyricsBar({
 
 export function Player() {
   const { t } = useI18n();
+  const { track, playing, selectTrack, setPlaying } = usePlayerState();
 
-  const [currentId, setCurrentId] = useState<string>(playlist[0]?.id ?? "");
-  const current: Track | undefined = playlist.find((tr) => tr.id === currentId);
-  const [state, setState] = useState<TrackState>("probing");
-  const [playing, setPlaying] = useState(false);
-  // Гидрация: сервер и первый рендер клиента обязаны совпасть попиксельно,
-  // поэтому `disabled` включаем только после монтирования. До этого кнопки
-  // выглядят активными, но onClick-гарды их игнорируют, а без JS они всё
-  // равно inert — звук без клиента невозможен.
+  const [availability, setAvailability] = useState<Availability>("probing");
+  // Гидрация: сервер и первый рендер клиента обязаны совпасть, поэтому
+  // `disabled` включаем только после монтирования (кнопки до этого inert:
+  // обработчики всё равно сторожат состояние).
   const [mounted, setMounted] = useState(false);
+
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const playerRef = useRef<YTPlayerInstance | null>(null);
+  // ID для создания iframe: берём один раз (дальше треки меняет cue).
+  const [initialYoutubeId] = useState(
+    () => playlist.find((item) => item.id === track.id)?.youtubeId ?? "",
+  );
+
+  const disabled = availability !== "ready";
+  const buttonDisabled = mounted && disabled;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Рождение iframe-плеера: один раз, дальше только cue новых видео.
+  useEffect(() => {
+    let cancelled = false;
+    let instance: YTPlayerInstance | null = null;
 
-  const ctxRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const binsRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
-  const frameRef = useRef<number | null>(null);
+    loadYouTubeApi()
+      .then((api) => {
+        if (cancelled || !hostRef.current) return;
+        instance = new api.Player(hostRef.current, {
+          videoId: initialYoutubeId,
+          playerVars: { rel: 0 },
+          events: {
+            onReady: () => {
+              if (!cancelled) setAvailability("ready");
+            },
+            onStateChange: (event) => {
+              if (cancelled) return;
+              const apiNow = (window as unknown as { YT?: YTApi }).YT;
+              if (event.data === apiNow?.PlayerState.PLAYING) {
+                setAvailability("ready");
+                setPlaying(true);
+              } else {
+                setPlaying(false);
+                if (event.data === apiNow?.PlayerState.CUED) setAvailability("ready");
+              }
+            },
+            onError: () => {
+              if (!cancelled) {
+                setAvailability("missing");
+                setPlaying(false);
+              }
+            },
+          },
+        });
+        playerRef.current = instance;
+      })
+      .catch(() => {
+        if (!cancelled) setAvailability("missing");
+      });
 
-  const disabled = !current || state !== "ready";
-  /** До монтирования — всегда enabled: иначе SSR и клиент разъедутся (см. выше). */
-  const buttonDisabled = mounted && disabled;
-
-  const stopVisualizer = useCallback(() => {
-    if (frameRef.current !== null) {
-      cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    }
+    return () => {
+      cancelled = true;
+      instance?.destroy();
+      playerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Смена трека: гасим звук и начинаем зондировать новый.
   const select = useCallback(
     (id: string) => {
-      audioRef.current?.pause();
-      setPlaying(false);
-      stopVisualizer();
-      setCurrentId(id);
-      setState("probing");
-    },
-    [stopVisualizer],
-  );
-
-  /** Канвас в device pixels: иначе бары мылятся на retina. */
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const { width, height } = canvas.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.round(width * dpr));
-      canvas.height = Math.max(1, Math.round(height * dpr));
-    };
-
-    resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(canvas);
-    return () => observer.disconnect();
-  }, []);
-
-  const bloodColor = useCallback(
-    () =>
-      getComputedStyle(document.documentElement).getPropertyValue("--color-blood").trim() ||
-      "currentColor",
-    [],
-  );
-
-  /** Статичная полоса — состояние покоя, стримы и режим reduced-motion. */
-  const drawStatic = useCallback(() => {
-    const canvas = canvasRef.current;
-    const ctx2d = canvas?.getContext("2d");
-    if (!canvas || !ctx2d) return;
-
-    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
-    ctx2d.fillStyle = bloodColor();
-    const barHeight = Math.max(2, Math.round(canvas.height * 0.18));
-    ctx2d.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
-  }, [bloodColor]);
-
-  const runVisualizer = useCallback(() => {
-    const canvas = canvasRef.current;
-    const analyser = analyserRef.current;
-    const ctx2d = canvas?.getContext("2d");
-    if (!canvas || !analyser || !ctx2d) return;
-
-    if (!binsRef.current || binsRef.current.length !== analyser.frequencyBinCount) {
-      binsRef.current = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
-    }
-    const bins = binsRef.current;
-
-    const paint = () => {
-      analyser.getByteFrequencyData(bins);
-      ctx2d.clearRect(0, 0, canvas.width, canvas.height);
-      ctx2d.fillStyle = bloodColor();
-
-      const count = 28;
-      const gap = Math.max(1, Math.round(canvas.width * 0.004));
-      const barWidth = (canvas.width - gap * (count - 1)) / count;
-      const step = Math.floor(bins.length / count) || 1;
-
-      for (let i = 0; i < count; i += 1) {
-        const value = bins[i * step] / 255;
-        const height = Math.max(2, value * canvas.height);
-        ctx2d.fillRect(
-          i * (barWidth + gap),
-          canvas.height - height,
-          barWidth,
-          height,
-        );
-      }
-
-      frameRef.current = requestAnimationFrame(paint);
-    };
-
-    paint();
-  }, [bloodColor]);
-
-  const play = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio || !current || state !== "ready") return;
-
-    // Проверяем матч-медиа сами: CSS-правило до canvas не достаёт.
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // Граф только для своих файлов: стрим без CORS в нём глохнет.
-    const withGraph = !reduced && isLocalTrack(current.src);
-
-    try {
-      if (withGraph) {
-        // Граф строим один раз: createMediaElementSource на элемент — единожды.
-        if (!ctxRef.current) {
-          const AudioCtor =
-            window.AudioContext ??
-            (window as unknown as { webkitAudioContext?: typeof AudioContext })
-              .webkitAudioContext;
-          if (AudioCtor) {
-            const audioCtx = new AudioCtor();
-            const analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 128;
-            const source = audioCtx.createMediaElementSource(audio);
-            source.connect(analyser);
-            analyser.connect(audioCtx.destination);
-
-            ctxRef.current = audioCtx;
-            analyserRef.current = analyser;
-          }
+      selectTrack(id);
+      setAvailability("probing");
+      const next = playlist.find((item) => item.id === id);
+      if (next) {
+        try {
+          playerRef.current?.cueVideoById(next.youtubeId);
+        } catch {
+          setAvailability("missing");
         }
-        // После возврата с паузы контекст может быть suspended.
-        if (ctxRef.current?.state === "suspended") await ctxRef.current.resume();
       }
+    },
+    [selectTrack],
+  );
 
-      await audio.play();
-      setPlaying(true);
-
-      if (withGraph && analyserRef.current) runVisualizer();
-      else {
-        stopVisualizer();
-        drawStatic();
-      }
+  const play = useCallback(() => {
+    if (disabled) return;
+    try {
+      playerRef.current?.playVideo();
     } catch {
-      // Воспроизведение отклонено — честно помечаем трек битым.
-      setState("missing");
-      setPlaying(false);
-      stopVisualizer();
+      setAvailability("missing");
     }
-  }, [current, state, drawStatic, runVisualizer, stopVisualizer]);
+  }, [disabled]);
 
   const pause = useCallback(() => {
-    audioRef.current?.pause();
-    setPlaying(false);
-    stopVisualizer();
-    drawStatic();
-  }, [drawStatic, stopVisualizer]);
-
-  const stop = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
+    try {
+      playerRef.current?.pauseVideo();
+    } catch {
+      setAvailability("missing");
     }
     setPlaying(false);
-    stopVisualizer();
-    drawStatic();
-  }, [drawStatic, stopVisualizer]);
+  }, [setPlaying]);
 
-  // Покой рисуем сразу, как только знаем, что трек готов.
-  useEffect(() => {
-    if (state === "ready" && !playing) drawStatic();
-  }, [state, playing, drawStatic]);
-
-  useEffect(
-    () => () => {
-      stopVisualizer();
-      void ctxRef.current?.close();
-    },
-    [stopVisualizer],
-  );
-
-  if (!current) {
-    return (
-      <p className="font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">
-        {t(dict.player.silence)}
-      </p>
-    );
-  }
+  const stop = useCallback(() => {
+    try {
+      playerRef.current?.stopVideo();
+    } catch {
+      setAvailability("missing");
+    }
+    setPlaying(false);
+  }, [setPlaying]);
 
   return (
     <div className="flex flex-col gap-2">
-      <LyricsBar track={current} playing={playing} label={t(dict.player.lyrics)} />
-
-      <audio
-        key={current.id}
-        ref={audioRef}
-        src={current.src}
-        loop={current.loop}
-        preload="metadata"
-        // CORS-режим только для своих файлов (там нужен граф анализатора).
-        // Чужому CDN без ACAO-заголовков crossOrigin роняет загрузку:
-        // браузер режет медиа до onError.
-        crossOrigin={isLocalTrack(current.src) ? "anonymous" : undefined}
-        onCanPlay={() => setState("ready")}
-        onError={() => {
-          setState("missing");
-          setPlaying(false);
-          stopVisualizer();
-        }}
-        onEnded={stop}
+      <LyricsBar
+        title={track.title}
+        artist={track.artist}
+        lines={track.lyrics}
+        playing={playing}
+        label={t(dict.player.lyrics)}
       />
 
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        className="h-12 w-full border border-blood-dim bg-void-deep"
-      />
+      {/* Мини-экран: официальный клип, просмотры идут автору. */}
+      <div className="border border-blood-dim bg-void-deep">
+        <div ref={hostRef} className="aspect-video w-full" />
+      </div>
 
       <div className="flex items-center gap-1">
         <button
@@ -334,56 +288,54 @@ export function Player() {
         </button>
 
         <p className="ml-1 min-w-0 flex-1 truncate font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">
-          {state === "missing" ? (
+          {availability === "missing" ? (
             t(dict.player.trackUnplayable)
           ) : (
             <>
-              {current.title} — {current.artist}
+              {track.title} — {track.artist}
             </>
           )}
         </p>
       </div>
 
-      {/* Подпись автора со ссылкой — требование лицензии piapro. */}
+      {/* Подпись автора со ссылкой на официальный клип. */}
       <a
-        href={current.sourceUrl}
+        href={watchUrl(track)}
         target="_blank"
         rel="noopener noreferrer"
         className="w-fit font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase hover:text-blood"
       >
-        {t(dict.player.viaPiapro)}: {current.artist} ↗
+        {t(dict.player.watchOnYoutube)}: {track.artist} ↗
       </a>
 
-      {playlist.length > 1 ? (
-        <div>
-          <p className="mb-1 font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">
-            {t(dict.player.tracklist)}
-          </p>
-          <ol className="flex flex-col">
-            {playlist.map((track, index) => {
-              const active = track.id === currentId;
-              return (
-                <li key={track.id}>
-                  <button
-                    type="button"
-                    onClick={() => select(track.id)}
-                    aria-current={active}
-                    className={cn(
-                      "flex w-full items-baseline gap-2 px-1 py-0.5 text-left font-pixel text-[9px] tracking-[0.04em] uppercase transition-colors",
-                      active ? "bg-blood text-bone" : "text-bone-dim hover:bg-void-deep hover:text-cyan",
-                    )}
-                  >
-                    <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                    <span className="min-w-0 flex-1 truncate">
-                      {track.title} — {track.artist}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      ) : null}
+      <div>
+        <p className="mb-1 font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">
+          {t(dict.player.tracklist)}
+        </p>
+        <ol className="flex flex-col">
+          {playlist.map((item, index) => {
+            const active = item.id === track.id;
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => select(item.id)}
+                  aria-current={active}
+                  className={cn(
+                    "flex w-full items-baseline gap-2 px-1 py-0.5 text-left font-pixel text-[9px] tracking-[0.04em] uppercase transition-colors",
+                    active ? "bg-blood text-bone" : "text-bone-dim hover:bg-void-deep hover:text-cyan",
+                  )}
+                >
+                  <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {item.title} — {item.artist}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
   );
 }

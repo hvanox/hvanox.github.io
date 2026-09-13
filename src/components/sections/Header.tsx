@@ -37,7 +37,7 @@ export function Header() {
             <p className="mt-1 font-jp text-lg text-blood-dim">{profile.tetoName}</p>
             <p className="mt-2 font-mono text-sm text-bone">{t(dict.header.slogan)}</p>
             <p className="font-mono text-xs text-bone-dim">
-              {t(profile.role)} · {t(profile.location)}
+              {t(profile.role)}
             </p>
           </div>
 

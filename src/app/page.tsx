@@ -1,6 +1,6 @@
-import { Marquee } from "@/components/chrome/Marquee";
 import { Player } from "@/components/chrome/Player";
 import { ScanlineOverlay } from "@/components/chrome/ScanlineOverlay";
+import { TopBar } from "@/components/chrome/TopBar";
 import { Win98Window } from "@/components/chrome/Win98Window";
 import { ZigzagRail } from "@/components/chrome/ZigzagRail";
 import { About } from "@/components/sections/About";
@@ -20,13 +20,15 @@ import { Webring } from "@/components/sections/Webring";
 import { dict } from "@/content/dict";
 import { achievements, profile } from "@/content/profile";
 import { updates } from "@/content/updates";
+import { PlayerProvider } from "@/lib/player-state";
 
 /**
- * Композиция страницы строго по DESIGN.md: верхний Marquee -> Header ->
+ * Композиция страницы строго по DESIGN.md: верхний TopBar -> Header ->
  * grid [240px_1fr_240px] (lg, ниже — один столбец) -> Footer.
  * Server Component: локализация внутри секций через useI18n/<T/>,
- * здесь только статические данные из dict/profile (обе локали сразу,
- * чтобы Marquee остался серверным).
+ * здесь только статические данные из dict/profile. Состояние плеера
+ * (трек/пауза) живёт в PlayerProvider: TopBar и Player — клиенты,
+ * которые его читают. TopBar крутит текст песни, пока играет.
  */
 
 const marqueeItems = [
@@ -39,7 +41,8 @@ const marqueeItems = [
 export default function Home() {
   return (
     <div className="relative flex min-h-full flex-col">
-      <Marquee items={marqueeItems} />
+      <PlayerProvider>
+        <TopBar fallback={marqueeItems} />
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-3 px-7 py-3">
         <Header />
@@ -78,6 +81,7 @@ export default function Home() {
 
       <ZigzagRail />
       <ScanlineOverlay />
+      </PlayerProvider>
     </div>
   );
 }

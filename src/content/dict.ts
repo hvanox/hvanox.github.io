@@ -100,7 +100,7 @@ export const dict = {
     trackUnplayable: { ru: "трек не играет", en: "track unavailable" },
     tracklist: { ru: "плейлист", en: "playlist" },
     lyrics: { ru: "текст песни", en: "lyrics" },
-    viaPiapro: { ru: "трек с piapro", en: "track via piapro" },
+    watchOnYoutube: { ru: "смотреть на youtube", en: "watch on youtube" },
   },
   github: {
     repos: { ru: "публичных репо", en: "public repos" },

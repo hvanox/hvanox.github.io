@@ -4,7 +4,6 @@ export const profile = {
   handle: "hvano",
   role: { ru: "backend-разработчик", en: "backend developer" },
   tetoName: "重音テト",
-  location: { ru: "Каракол, Кыргызстан", en: "Karakol, Kyrgyzstan" },
   tagline: {
     ru: "пишу серверы, ломаю ритм",
     en: "i write servers, i break the beat",
