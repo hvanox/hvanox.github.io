@@ -289,7 +289,10 @@ export function Player() {
         src={current.src}
         loop={current.loop}
         preload="metadata"
-        crossOrigin="anonymous"
+        // CORS-режим только для своих файлов (там нужен граф анализатора).
+        // Чужому CDN без ACAO-заголовков crossOrigin роняет загрузку:
+        // браузер режет медиа до onError.
+        crossOrigin={isLocalTrack(current.src) ? "anonymous" : undefined}
         onCanPlay={() => setState("ready")}
         onError={() => {
           setState("missing");
