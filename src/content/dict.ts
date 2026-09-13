@@ -99,6 +99,8 @@ export const dict = {
     silence: { ru: "трек не загружен", en: "no track loaded" },
     trackUnplayable: { ru: "трек не играет", en: "track unavailable" },
     tracklist: { ru: "плейлист", en: "playlist" },
+    lyrics: { ru: "текст песни", en: "lyrics" },
+    viaPiapro: { ru: "трек с piapro", en: "track via piapro" },
   },
   github: {
     repos: { ru: "публичных репо", en: "public repos" },

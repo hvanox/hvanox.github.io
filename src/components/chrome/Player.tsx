@@ -24,6 +24,49 @@ type TrackState = "probing" | "ready" | "missing";
 const btnClass =
   "grid size-7 shrink-0 place-items-center border border-chrome bg-void text-bone transition-transform hover:border-blood hover:text-blood active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-chrome disabled:hover:text-bone";
 
+/**
+ * Плавающий бар текста песни над плеером. Текст крутится бегущей строкой,
+ * пока трек играет, на паузе — замирает (animation-play-state). Две копии
+ * строки подряд: keyframes marquee едет на -50%, шов бесшовный. Скорость —
+ * примерно 9 символов в секунду, чтобы успевать читать. Без текста песни
+ * крутим название. При prefers-reduced-motion глобальное правило глушит
+ * анимацию — бар становится статичным.
+ */
+function LyricsBar({
+  track,
+  playing,
+  label,
+}: {
+  track: Track;
+  playing: boolean;
+  label: string;
+}) {
+  const text =
+    track.lyrics.length > 0 ? track.lyrics.join(" ✦ ") : `${track.title} — ${track.artist}`;
+  const duration = Math.max(40, Math.round(text.length / 9));
+
+  return (
+    <div
+      role="marquee"
+      aria-label={label}
+      className="overflow-hidden border border-blood bg-void-deep px-2 py-1 shadow-glow-blood"
+    >
+      <div
+        aria-hidden="true"
+        className="animate-marquee flex w-max"
+        style={{
+          animationDuration: `${duration}s`,
+          animationPlayState: playing ? "running" : "paused",
+        }}
+      >
+        <span className="pr-12 font-jp text-[11px] whitespace-nowrap text-bone">{text}</span>
+        <span className="pr-12 font-jp text-[11px] whitespace-nowrap text-bone">{text}</span>
+      </div>
+      <span className="sr-only">{text}</span>
+    </div>
+  );
+}
+
 export function Player() {
   const { t } = useI18n();
 
@@ -226,6 +269,8 @@ export function Player() {
 
   return (
     <div className="flex flex-col gap-2">
+      <LyricsBar track={current} playing={playing} label={t(dict.player.lyrics)} />
+
       <audio
         key={current.id}
         ref={audioRef}
@@ -283,6 +328,16 @@ export function Player() {
           )}
         </p>
       </div>
+
+      {/* Подпись автора со ссылкой — требование лицензии piapro. */}
+      <a
+        href={current.sourceUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-fit font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase hover:text-blood"
+      >
+        {t(dict.player.viaPiapro)}: {current.artist} ↗
+      </a>
 
       {playlist.length > 1 ? (
         <div>
