@@ -68,7 +68,7 @@ export const experience = [
   },
   {
     id: "bots",
-    title: { ru: "Telegram-боты", en: "Telegram bots" },
+    title: { ru: "Бэкенд-разработка", en: "Backend dev" },
     body: {
       ru: "Боты и бэкенды к ним: асинхронный Python, очереди, Redis под состояние, Postgres под данные, деплой в Docker за Nginx.",
       en: "Bots and their backends: async Python, queues, Redis for state, Postgres for data, Docker deploys behind Nginx.",

@@ -39,9 +39,9 @@ const marqueeItems = [
 ];
 
 /** Арты, выступающие из сетки: декорация, клики не перехватывают. */
-const decoLeft = art[3] ?? art[0];
-const decoRight = art[8] ?? art[0];
-const decoBottom = art[15] ?? art[0];
+const decoLeft = art[2] ?? art[0];
+const decoRight = art[5] ?? art[0];
+const decoBottom = art[7] ?? art[0];
 
 export default function Home() {
   return (

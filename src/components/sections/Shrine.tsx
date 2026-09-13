@@ -15,7 +15,7 @@ import { dict } from "@/content/dict";
 import { useI18n } from "@/lib/i18n";
 
 /**
- * Галерея фанартов: masonry через CSS columns, все 26 артов из art.json.
+ * Галерея фанартов: masonry через CSS columns, 9 артов из art.json.
  * Клик по арту раскрывает его в модалке (Radix Dialog) — там подпись автора
  * тоже обязательна.
  */

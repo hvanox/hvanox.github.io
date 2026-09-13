@@ -14,25 +14,11 @@
     "ratio": "landscape"
   },
   {
-    "src": "/art/teto-12182347.webp",
-    "artist": "tk1t4_egg25",
-    "width": 900,
-    "height": 632,
-    "ratio": "landscape"
-  },
-  {
     "src": "/art/teto-12182198.webp",
     "artist": "gingi_2",
     "width": 900,
     "height": 1415,
     "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12182025.webp",
-    "artist": "beullobjiji",
-    "width": 900,
-    "height": 699,
-    "ratio": "landscape"
   },
   {
     "src": "/art/teto-12181111.webp",
@@ -49,13 +35,6 @@
     "ratio": "square"
   },
   {
-    "src": "/art/teto-12179261.webp",
-    "artist": "zero_(jckz2334)",
-    "width": 900,
-    "height": 998,
-    "ratio": "portrait"
-  },
-  {
     "src": "/art/teto-12179084.webp",
     "artist": "l0vebun",
     "width": 900,
@@ -63,45 +42,10 @@
     "ratio": "landscape"
   },
   {
-    "src": "/art/teto-12175814.webp",
-    "artist": "nxi_7575",
-    "width": 900,
-    "height": 900,
-    "ratio": "square"
-  },
-  {
     "src": "/art/teto-12174500.webp",
     "artist": "ktnazm0702",
     "width": 900,
     "height": 1126,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12174449.webp",
-    "artist": "el_aka_nao",
-    "width": 900,
-    "height": 1350,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12173999.webp",
-    "artist": "kurokabe_b",
-    "width": 900,
-    "height": 1350,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12173646.webp",
-    "artist": "professor_brainrot",
-    "width": 900,
-    "height": 896,
-    "ratio": "square"
-  },
-  {
-    "src": "/art/teto-12173414.webp",
-    "artist": "yi_xing_luren",
-    "width": 900,
-    "height": 1201,
     "ratio": "portrait"
   },
   {
@@ -112,73 +56,10 @@
     "ratio": "landscape"
   },
   {
-    "src": "/art/teto-12172968.webp",
-    "artist": "uwa_illust_v16v",
-    "width": 900,
-    "height": 1273,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12172415.webp",
-    "artist": "oda_kogane",
-    "width": 900,
-    "height": 507,
-    "ratio": "landscape"
-  },
-  {
-    "src": "/art/teto-12171644.webp",
-    "artist": "iwako_(eiken3kyuboy)",
-    "width": 900,
-    "height": 1095,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12171597.webp",
-    "artist": "punpond",
-    "width": 900,
-    "height": 1271,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12171000.webp",
-    "artist": "fukaba_yoh",
-    "width": 900,
-    "height": 796,
-    "ratio": "landscape"
-  },
-  {
-    "src": "/art/teto-12169381.webp",
-    "artist": "soyose",
-    "width": 900,
-    "height": 1316,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12168617.webp",
-    "artist": "y0g_lu",
-    "width": 900,
-    "height": 737,
-    "ratio": "landscape"
-  },
-  {
     "src": "/art/teto-12167552.webp",
     "artist": "yamahenjuretsu",
     "width": 900,
     "height": 900,
     "ratio": "square"
-  },
-  {
-    "src": "/art/teto-12164627.webp",
-    "artist": "aramonn_chan019",
-    "width": 900,
-    "height": 900,
-    "ratio": "square"
-  },
-  {
-    "src": "/art/teto-12164477.webp",
-    "artist": "tsea_art",
-    "width": 900,
-    "height": 1218,
-    "ratio": "portrait"
   }
 ]
