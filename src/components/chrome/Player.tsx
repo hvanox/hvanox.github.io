@@ -74,6 +74,16 @@ export function Player() {
   const current: Track | undefined = playlist.find((tr) => tr.id === currentId);
   const [state, setState] = useState<TrackState>("probing");
   const [playing, setPlaying] = useState(false);
+  // Гидрация: сервер и первый рендер клиента обязаны совпасть попиксельно,
+  // поэтому `disabled` включаем только после монтирования. До этого кнопки
+  // выглядят активными, но onClick-гарды их игнорируют, а без JS они всё
+  // равно inert — звук без клиента невозможен.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -84,6 +94,8 @@ export function Player() {
   const frameRef = useRef<number | null>(null);
 
   const disabled = !current || state !== "ready";
+  /** До монтирования — всегда enabled: иначе SSR и клиент разъедутся (см. выше). */
+  const buttonDisabled = mounted && disabled;
 
   const stopVisualizer = useCallback(() => {
     if (frameRef.current !== null) {
@@ -297,7 +309,7 @@ export function Player() {
         <button
           type="button"
           onClick={playing ? pause : play}
-          disabled={disabled}
+          disabled={buttonDisabled}
           aria-label={playing ? t(dict.player.pause) : t(dict.player.play)}
           className={btnClass}
         >
@@ -311,7 +323,7 @@ export function Player() {
         <button
           type="button"
           onClick={stop}
-          disabled={disabled}
+          disabled={buttonDisabled}
           aria-label={t(dict.player.stop)}
           className={btnClass}
         >
