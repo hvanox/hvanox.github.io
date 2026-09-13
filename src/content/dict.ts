@@ -42,12 +42,12 @@ export const dict = {
   },
   about: {
     body: {
-      ru: "Бэкенд-разработчик. Пришёл через embedded и C, остался в серверах: очереди, схемы данных, авторизация, деплой. Учился сам, проверяю себя контестами и хакатонами. Слушаю breakcore, поэтому сайт выглядит так, как выглядит.",
-      en: "Backend developer. Came in through embedded and C, stayed in servers: queues, data schemas, auth, deploys. Self-taught, verified by contests and hackathons. I listen to breakcore, hence the way this site looks.",
+      ru: "Привет! Эта вкладка «обо мне». Не знаю, что тут написать, так что коротко о себе: мне 14 лет, родился 19.11.2011. Увлекаюсь компьютерами и всем, что с ними связано. Из музыки нравятся вокалоиды, поп, брейккор, найткор, иногда могу послушать рэп. Ну и всё.",
+      en: "Hi! This is the about tab. Not sure what to write here, so briefly about me: I'm 14, born 19.11.2011. Into computers and everything related. Music-wise I like vocaloids, pop, breakcore, nightcore, sometimes I can put on rap. That's about it.",
     },
-    disclaimer: {
-      ru: "Страница собрана вручную. Не шаблон. Лучше смотреть на широком экране.",
-      en: "Hand-built page. Not a template. Best on a wide screen.",
+    note: {
+      ru: "этот лендинг слегка вайбкод, потому что я не хочу во фронт, да и лень",
+      en: "this landing is slightly vibe-coded, cause I don't wanna do frontend, plus I'm lazy",
     },
   },
   shrine: {

@@ -20,7 +20,7 @@ export function About() {
             <T value={dict.about.body} />
           </p>
           <p className="mt-2 font-mono text-[11px] leading-snug text-bone-dim">
-            <T value={dict.about.disclaimer} />
+            <T value={dict.about.note} />
           </p>
         </div>
 
