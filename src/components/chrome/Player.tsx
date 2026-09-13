@@ -147,6 +147,13 @@ export function Player() {
   const [initialYoutubeId] = useState(
     () => playlist.find((item) => item.id === track.id)?.youtubeId ?? "",
   );
+  // Актуальный ID для onReady: если трек выбрали до загрузки API,
+  // cue потерялся бы — onReady подхватит его отсюда. Пишем только
+  // в эффекте, не в рендере (иначе ругается react-hooks/refs).
+  const pendingYoutubeId = useRef(initialYoutubeId);
+  useEffect(() => {
+    pendingYoutubeId.current = track.youtubeId;
+  }, [track.youtubeId]);
 
   const disabled = availability !== "ready";
   const buttonDisabled = mounted && disabled;
@@ -169,7 +176,15 @@ export function Player() {
           playerVars: { rel: 0 },
           events: {
             onReady: () => {
-              if (!cancelled) setAvailability("ready");
+              if (cancelled) return;
+              // Догружаем актуальный трек: могли выбрать до готовности API.
+              try {
+                instance?.cueVideoById(pendingYoutubeId.current);
+              } catch {
+                setAvailability("missing");
+                return;
+              }
+              setAvailability("ready");
             },
             onStateChange: (event) => {
               if (cancelled) return;
@@ -257,9 +272,11 @@ export function Player() {
         label={t(dict.player.lyrics)}
       />
 
-      {/* Мини-экран: официальный клип, просмотры идут автору. */}
-      <div className="border border-blood-dim bg-void-deep">
-        <div ref={hostRef} className="aspect-video w-full" />
+      {/* Хост iframe: звук идёт отсюда, картинки нет — видеоэкран
+          не нужен, поэтому держим плеер 1×1 и прозрачным (display:none
+          браузеры умеют глушить, opacity — нет). */}
+      <div aria-hidden="true" className="absolute h-px w-px overflow-hidden opacity-0">
+        <div ref={hostRef} />
       </div>
 
       <div className="flex items-center gap-1">

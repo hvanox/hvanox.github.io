@@ -18,7 +18,6 @@ import { Status } from "@/components/sections/Status";
 import { UpdatesLog } from "@/components/sections/UpdatesLog";
 import { Webring } from "@/components/sections/Webring";
 import { dict } from "@/content/dict";
-import { achievements, profile } from "@/content/profile";
 import { updates } from "@/content/updates";
 import { PlayerProvider } from "@/lib/player-state";
 
@@ -28,21 +27,15 @@ import { PlayerProvider } from "@/lib/player-state";
  * Server Component: локализация внутри секций через useI18n/<T/>,
  * здесь только статические данные из dict/profile. Состояние плеера
  * (трек/пауза) живёт в PlayerProvider: TopBar и Player — клиенты,
- * которые его читают. TopBar крутит текст песни, пока играет.
+ * которые его читают. TopBar — та же верхняя полоса, но вместо слоганов
+ * крутит текст текущей песни.
  */
-
-const marqueeItems = [
-  `${dict.header.slogan.ru} / ${dict.header.slogan.en}`,
-  `${profile.tagline.ru} / ${profile.tagline.en}`,
-  ...achievements.map((item) => item.title.ru),
-  profile.tetoName,
-];
 
 export default function Home() {
   return (
     <div className="relative flex min-h-full flex-col">
       <PlayerProvider>
-        <TopBar fallback={marqueeItems} />
+        <TopBar />
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-3 px-7 py-3">
         <Header />

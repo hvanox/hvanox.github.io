@@ -60,7 +60,7 @@
 - `Marquee` — CSS-анимация, не тег `<marquee>`; уважает `prefers-reduced-motion`.
 - `GlitchText` — три слоя (bone / blood / cyan) со случайным `clip-path`, только на hover и на заголовке hero.
 - `Badge8831` — пиксельные баннеры 88×31 в духе webring, вместо чужих сайтов — технологии стека.
-- `Player` — Winamp-подобный поверх официальных клипов YouTube (iframe API, мини-экран, просмотры идут авторам). Свой транспорт, живых аудиоданных из JS нет — визуализатор заменён статичной полосой. Сверху `LyricsBar`: текст текущей песни бегущей строкой, крутится пока играет. Никогда не autoplay.
+- `Player` — Winamp-подобный поверх официальных клипов YouTube (iframe API, видеоэкран скрыт 1×1 — только звук). Свой транспорт, живых аудиоданных из JS нет — визуализатор заменён статичной полосой. Сверху `LyricsBar`: текст текущей песни бегущей строкой, крутится пока играет. Никогда не autoplay.
 - `TetoArt` — `<img>` + мелкая подпись `art: {artist}` под ним, `loading="lazy"`, `decoding="async"`.
 - `ScanlineOverlay` — `pointer-events: none`, `mix-blend-mode: overlay`, отключается при reduced-motion.
 
