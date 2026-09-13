@@ -1,7 +1,6 @@
 "use client";
 
 import { GlitchText } from "@/components/chrome/GlitchText";
-import { VisitCounter } from "@/components/chrome/VisitCounter";
 import { Win98Window } from "@/components/chrome/Win98Window";
 import { dict, locales } from "@/content/dict";
 import { profile } from "@/content/profile";
@@ -42,8 +41,6 @@ export function Header() {
           </div>
 
           <div className="flex items-end gap-4">
-            <VisitCounter />
-
             {/* Технические лейблы ru/en — исключение из правила про словарь. */}
             <div className="flex flex-col gap-0.5">
               <span

@@ -38,10 +38,10 @@
 
 ```
 ┌────────────────── marquee: бегущая строка (breakcore + ачивки) ──────────────┐
-│ HEADER: логотип HVANO глитч + 重音テト + слоган + счётчик визитов + lang     │
+│ HEADER: логотип HVANO глитч + 重音テト + слоган + lang                         │
 ├───────────────┬────────────────────────────────────┬────────────────────────┤
 │ LEFT (240px)  │ CENTER (fluid)                     │ RIGHT (240px)          │
-│ • плеер       │ • WELCOME / about                  │ • status: online       │
+│ • плеер       │ • WELCOME / about                  │ • github-статы         │
 │ • nav-меню    │ • STACK (сетка бейджей)            │ • now playing          │
 │ • updates log │ • ACHIEVEMENTS (окна win98)         │ • Teto shrine (арты)  │
 │ • 88×31 кнопки│ • PROJECTS (карточки-скриншоты)     │ • guestbook-заглушка   │

@@ -17,13 +17,7 @@ export const dict = {
       ru: "серверы, сегфолты и 200 bpm",
       en: "servers, segfaults and 200 bpm",
     },
-    visits: { ru: "визитов", en: "visits" },
     lang: { ru: "язык", en: "lang" },
-    /** Счётчик локальный: сервера нет, глобальные визиты считать нечем. */
-    visitsLocal: {
-      ru: "Локальный счётчик визитов: считает только этот браузер, не весь сайт.",
-      en: "Local visit counter: counts this browser only, not the whole site.",
-    },
   },
   sections: {
     welcome: { ru: "добро пожаловать", en: "welcome" },
@@ -34,7 +28,6 @@ export const dict = {
     shrine: { ru: "алтарь тето", en: "teto shrine" },
     contact: { ru: "связаться", en: "get in touch" },
     updates: { ru: "обновления", en: "updates" },
-    status: { ru: "статус", en: "status" },
     nowPlaying: { ru: "сейчас играет", en: "now playing" },
     guestbook: { ru: "гостевая", en: "guestbook" },
     webring: { ru: "кольцо", en: "webring" },
@@ -70,13 +63,6 @@ export const dict = {
       en: "Kasane Teto fan art by",
     },
     open: { ru: "Открыть арт целиком, автор", en: "Open full art by" },
-  },
-  status: {
-    online: { ru: "в сети", en: "online" },
-    mood: { ru: "настроение", en: "mood" },
-    moodValue: { ru: "компилируется", en: "compiling" },
-    listening: { ru: "слушаю", en: "listening to" },
-    listeningValue: { ru: "breakcore", en: "breakcore" },
   },
   contact: {
     hint: {

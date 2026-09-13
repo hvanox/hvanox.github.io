@@ -14,7 +14,6 @@ import { Header } from "@/components/sections/Header";
 import { Shrine } from "@/components/sections/Shrine";
 import { SideNav } from "@/components/sections/SideNav";
 import { Stack } from "@/components/sections/Stack";
-import { Status } from "@/components/sections/Status";
 import { UpdatesLog } from "@/components/sections/UpdatesLog";
 import { Webring } from "@/components/sections/Webring";
 import { dict } from "@/content/dict";
@@ -62,7 +61,6 @@ export default function Home() {
 
           {/* Правая колонка. */}
           <div className="flex min-w-0 flex-col gap-3">
-            <Status />
             <GithubStats />
             <Shrine />
             <Guestbook />
