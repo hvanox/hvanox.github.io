@@ -18,12 +18,12 @@ const jp = Zen_Kaku_Gothic_New({
 });
 
 export const metadata: Metadata = {
-  title: "hvano // backend dev",
+  title: "hvano // kasane teto",
   description:
     "Portfolio of hvano — backend developer. Python, C, PostgreSQL, Docker, Linux. Breakcore and Kasane Teto included.",
   metadataBase: new URL("https://hvanox.github.io"),
   openGraph: {
-    title: "hvano // backend dev",
+    title: "hvano // kasane teto",
     description: "backend developer · python · c · postgres · docker · breakcore",
     url: "https://hvanox.github.io",
     siteName: "hvano",
