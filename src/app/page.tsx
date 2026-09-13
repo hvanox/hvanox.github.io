@@ -1,7 +1,6 @@
 import { Marquee } from "@/components/chrome/Marquee";
 import { Player } from "@/components/chrome/Player";
 import { ScanlineOverlay } from "@/components/chrome/ScanlineOverlay";
-import { TetoArt } from "@/components/chrome/TetoArt";
 import { Win98Window } from "@/components/chrome/Win98Window";
 import { ZigzagRail } from "@/components/chrome/ZigzagRail";
 import { About } from "@/components/sections/About";
@@ -18,7 +17,6 @@ import { Stack } from "@/components/sections/Stack";
 import { Status } from "@/components/sections/Status";
 import { UpdatesLog } from "@/components/sections/UpdatesLog";
 import { Webring } from "@/components/sections/Webring";
-import art from "@/content/art.json";
 import { dict } from "@/content/dict";
 import { achievements, profile } from "@/content/profile";
 import { updates } from "@/content/updates";
@@ -37,11 +35,6 @@ const marqueeItems = [
   ...achievements.map((item) => item.title.ru),
   profile.tetoName,
 ];
-
-/** Арты, выступающие из сетки: декорация, клики не перехватывают. */
-const decoLeft = art[2] ?? art[0];
-const decoRight = art[5] ?? art[0];
-const decoBottom = art[7] ?? art[0];
 
 export default function Home() {
   return (
@@ -77,47 +70,6 @@ export default function Home() {
             <GithubStats />
             <Shrine />
             <Guestbook />
-          </div>
-        </div>
-
-        {/* Выступающие арты: absolute, вне текстового потока,
-            на мобиле скрыты, чтобы не ломать одноколоночную раскладку. */}
-        <div className="relative">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-24 -left-4 hidden w-28 -rotate-3 lg:block"
-          >
-            <TetoArt
-              src={decoLeft.src}
-              artist={decoLeft.artist}
-              width={decoLeft.width}
-              height={decoLeft.height}
-              alt=""
-            />
-          </div>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-16 -right-4 hidden w-28 rotate-3 lg:block"
-          >
-            <TetoArt
-              src={decoRight.src}
-              artist={decoRight.artist}
-              width={decoRight.width}
-              height={decoRight.height}
-              alt=""
-            />
-          </div>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-10 left-1/3 hidden w-24 rotate-2 lg:block"
-          >
-            <TetoArt
-              src={decoBottom.src}
-              artist={decoBottom.artist}
-              width={decoBottom.width}
-              height={decoBottom.height}
-              alt=""
-            />
           </div>
         </div>
 

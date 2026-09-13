@@ -21,32 +21,32 @@
     "ratio": "portrait"
   },
   {
-    "src": "/art/teto-12181111.webp",
-    "artist": "phapha_draw",
-    "width": 900,
-    "height": 1200,
-    "ratio": "portrait"
-  },
-  {
-    "src": "/art/teto-12179296.webp",
-    "artist": "kaseki0908",
-    "width": 900,
-    "height": 900,
+    "src": "/art/photo/teto-fan-2.webp",
+    "artist": "kantou303019",
+    "width": 680,
+    "height": 680,
     "ratio": "square"
   },
   {
-    "src": "/art/teto-12179084.webp",
-    "artist": "l0vebun",
-    "width": 900,
-    "height": 749,
-    "ratio": "landscape"
+    "src": "/art/photo/teto-fan-4.webp",
+    "artist": "unknown",
+    "width": 640,
+    "height": 640,
+    "ratio": "square"
   },
   {
-    "src": "/art/teto-12174500.webp",
-    "artist": "ktnazm0702",
-    "width": 900,
-    "height": 1126,
+    "src": "/art/photo/teto-fan-3.webp",
+    "artist": "unknown",
+    "width": 510,
+    "height": 680,
     "ratio": "portrait"
+  },
+  {
+    "src": "/art/photo/teto-fan-1.webp",
+    "artist": "unknown",
+    "width": 736,
+    "height": 736,
+    "ratio": "square"
   },
   {
     "src": "/art/teto-12173237.webp",
