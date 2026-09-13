@@ -97,6 +97,8 @@ export const dict = {
     pause: { ru: "пауза", en: "pause" },
     stop: { ru: "стоп", en: "stop" },
     silence: { ru: "трек не загружен", en: "no track loaded" },
+    trackUnplayable: { ru: "трек не играет", en: "track unavailable" },
+    tracklist: { ru: "плейлист", en: "playlist" },
   },
   github: {
     repos: { ru: "публичных репо", en: "public repos" },

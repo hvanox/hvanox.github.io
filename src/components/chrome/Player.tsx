@@ -4,50 +4,62 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Square } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { dict } from "@/content/dict";
+import { isLocalTrack, playlist, type Track } from "@/content/playlist";
+import { cn } from "@/lib/utils";
 
 /**
- * Winamp-подобный плеер под один локальный трек.
+ * Winamp-подобный плеер поверх плейлиста из src/content/playlist.ts.
  *
- * Правила: никакого autoplay — звук стартует только с клика. Если файла нет
- * (HEAD не ок, или <audio> ругнулся) — показываем dict.player.silence и
- * гасим кнопки. Визуализатор рисуется из AnalyserNode и живёт только во время
- * воспроизведения; при prefers-reduced-motion вместо анимации статичная полоса.
+ * Правила: никакого autoplay — звук стартует только с клика. Готовность
+ * трека определяют события самого <audio> (onCanPlay/onError), а не HEAD:
+ * внешние стримы не всегда отвечают на HEAD и не всегда отдают CORS.
+ * Визуализатор (AnalyserNode) подключаем только для своих файлов: чужой
+ * сервер без CORS-заголовков глушит звук в WebAudio-графе, поэтому стримы
+ * играют напрямую, а канвас показывает статичную полосу. При
+ * prefers-reduced-motion анимации нет вообще — тоже статичная полоса.
  */
 
-const TRACK_SRC = "/audio/track.mp3";
+type TrackState = "probing" | "ready" | "missing";
 
-type Availability = "probing" | "ready" | "missing";
+const btnClass =
+  "grid size-7 shrink-0 place-items-center border border-chrome bg-void text-bone transition-transform hover:border-blood hover:text-blood active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-chrome disabled:hover:text-bone";
 
 export function Player() {
   const { t } = useI18n();
+
+  const [currentId, setCurrentId] = useState<string>(playlist[0]?.id ?? "");
+  const current: Track | undefined = playlist.find((tr) => tr.id === currentId);
+  const [state, setState] = useState<TrackState>("probing");
+  const [playing, setPlaying] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const ctxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const binsRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const frameRef = useRef<number | null>(null);
 
-  const [availability, setAvailability] = useState<Availability>("probing");
-  const [playing, setPlaying] = useState(false);
+  const disabled = !current || state !== "ready";
 
-  const disabled = availability !== "ready";
-
-  // Есть ли вообще файл. На статическом хостинге 404 — нормальный ответ,
-  // поэтому это не ошибка, а ветка «тишина».
-  useEffect(() => {
-    const abort = new AbortController();
-
-    fetch(TRACK_SRC, { method: "HEAD", signal: abort.signal })
-      .then((res) => setAvailability(res.ok ? "ready" : "missing"))
-      .catch(() => {
-        if (!abort.signal.aborted) setAvailability("missing");
-      });
-
-    return () => abort.abort();
+  const stopVisualizer = useCallback(() => {
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
   }, []);
+
+  // Смена трека: гасим звук и начинаем зондировать новый.
+  const select = useCallback(
+    (id: string) => {
+      audioRef.current?.pause();
+      setPlaying(false);
+      stopVisualizer();
+      setCurrentId(id);
+      setState("probing");
+    },
+    [stopVisualizer],
+  );
 
   /** Канвас в device pixels: иначе бары мылятся на retina. */
   useEffect(() => {
@@ -74,7 +86,7 @@ export function Player() {
     [],
   );
 
-  /** Статичная полоса — состояние покоя и режим reduced-motion. */
+  /** Статичная полоса — состояние покоя, стримы и режим reduced-motion. */
   const drawStatic = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx2d = canvas?.getContext("2d");
@@ -85,13 +97,6 @@ export function Player() {
     const barHeight = Math.max(2, Math.round(canvas.height * 0.18));
     ctx2d.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
   }, [bloodColor]);
-
-  const stopVisualizer = useCallback(() => {
-    if (frameRef.current !== null) {
-      cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    }
-  }, []);
 
   const runVisualizer = useCallback(() => {
     const canvas = canvasRef.current;
@@ -133,14 +138,16 @@ export function Player() {
 
   const play = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio || disabled) return;
+    if (!audio || !current || state !== "ready") return;
 
     // Проверяем матч-медиа сами: CSS-правило до canvas не достаёт.
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Граф только для своих файлов: стрим без CORS в нём глохнет.
+    const withGraph = !reduced && isLocalTrack(current.src);
 
     try {
-      if (!reduced) {
-        // Графа строим один раз: createMediaElementSource на элемент — единожды.
+      if (withGraph) {
+        // Граф строим один раз: createMediaElementSource на элемент — единожды.
         if (!ctxRef.current) {
           const AudioCtor =
             window.AudioContext ??
@@ -156,7 +163,6 @@ export function Player() {
 
             ctxRef.current = audioCtx;
             analyserRef.current = analyser;
-            sourceRef.current = source;
           }
         }
         // После возврата с паузы контекст может быть suspended.
@@ -166,15 +172,18 @@ export function Player() {
       await audio.play();
       setPlaying(true);
 
-      if (reduced || !analyserRef.current) drawStatic();
-      else runVisualizer();
+      if (withGraph && analyserRef.current) runVisualizer();
+      else {
+        stopVisualizer();
+        drawStatic();
+      }
     } catch {
-      // Файл битый или воспроизведение отклонено — честно уходим в тишину.
-      setAvailability("missing");
+      // Воспроизведение отклонено — честно помечаем трек битым.
+      setState("missing");
       setPlaying(false);
       stopVisualizer();
     }
-  }, [disabled, drawStatic, runVisualizer, stopVisualizer]);
+  }, [current, state, drawStatic, runVisualizer, stopVisualizer]);
 
   const pause = useCallback(() => {
     audioRef.current?.pause();
@@ -194,10 +203,10 @@ export function Player() {
     drawStatic();
   }, [drawStatic, stopVisualizer]);
 
-  // Покой рисуем сразу, как только знаем, что трек есть.
+  // Покой рисуем сразу, как только знаем, что трек готов.
   useEffect(() => {
-    if (availability === "ready" && !playing) drawStatic();
-  }, [availability, playing, drawStatic]);
+    if (state === "ready" && !playing) drawStatic();
+  }, [state, playing, drawStatic]);
 
   useEffect(
     () => () => {
@@ -207,18 +216,30 @@ export function Player() {
     [stopVisualizer],
   );
 
+  if (!current) {
+    return (
+      <p className="font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">
+        {t(dict.player.silence)}
+      </p>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <audio
+        key={current.id}
         ref={audioRef}
-        src={TRACK_SRC}
-        preload="none"
-        onEnded={stop}
+        src={current.src}
+        loop={current.loop}
+        preload="metadata"
+        crossOrigin="anonymous"
+        onCanPlay={() => setState("ready")}
         onError={() => {
-          setAvailability("missing");
+          setState("missing");
           setPlaying(false);
           stopVisualizer();
         }}
+        onEnded={stop}
       />
 
       <canvas
@@ -233,7 +254,7 @@ export function Player() {
           onClick={playing ? pause : play}
           disabled={disabled}
           aria-label={playing ? t(dict.player.pause) : t(dict.player.play)}
-          className="grid size-7 place-items-center border border-chrome bg-void text-bone transition-transform hover:border-blood hover:text-blood active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-chrome disabled:hover:text-bone"
+          className={btnClass}
         >
           {playing ? (
             <Pause aria-hidden="true" className="size-3.5" strokeWidth={2} />
@@ -247,15 +268,52 @@ export function Player() {
           onClick={stop}
           disabled={disabled}
           aria-label={t(dict.player.stop)}
-          className="grid size-7 place-items-center border border-chrome bg-void text-bone transition-transform hover:border-blood hover:text-blood active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-chrome disabled:hover:text-bone"
+          className={btnClass}
         >
           <Square aria-hidden="true" className="size-3.5" strokeWidth={2} />
         </button>
 
         <p className="ml-1 min-w-0 flex-1 truncate font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">
-          {availability === "ready" ? "track.mp3" : t(dict.player.silence)}
+          {state === "missing" ? (
+            t(dict.player.trackUnplayable)
+          ) : (
+            <>
+              {current.title} — {current.artist}
+            </>
+          )}
         </p>
       </div>
+
+      {playlist.length > 1 ? (
+        <div>
+          <p className="mb-1 font-pixel text-[9px] tracking-[0.06em] text-bone-dim uppercase">
+            {t(dict.player.tracklist)}
+          </p>
+          <ol className="flex flex-col">
+            {playlist.map((track, index) => {
+              const active = track.id === currentId;
+              return (
+                <li key={track.id}>
+                  <button
+                    type="button"
+                    onClick={() => select(track.id)}
+                    aria-current={active}
+                    className={cn(
+                      "flex w-full items-baseline gap-2 px-1 py-0.5 text-left font-pixel text-[9px] tracking-[0.04em] uppercase transition-colors",
+                      active ? "bg-blood text-bone" : "text-bone-dim hover:bg-void-deep hover:text-cyan",
+                    )}
+                  >
+                    <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {track.title} — {track.artist}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      ) : null}
     </div>
   );
 }
