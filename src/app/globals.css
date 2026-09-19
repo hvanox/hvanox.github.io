@@ -68,24 +68,22 @@ body {
   font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.45;
-  /* сетка 90-х + виньетка, без картинок */
+  /* фон-картинка Kasane Teto Windows XP + затемнение для читаемости */
   background-image:
     linear-gradient(
-      to right,
-      color-mix(in srgb, var(--color-chrome) 6%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--color-chrome) 6%, transparent) 1px,
-      transparent 1px
+      color-mix(in srgb, var(--color-void-deep) 62%, transparent),
+      color-mix(in srgb, var(--color-void-deep) 78%, transparent)
     ),
     radial-gradient(
       ellipse 90% 60% at 50% 0%,
       color-mix(in srgb, var(--color-blood) 12%, transparent),
       transparent 70%
-    );
-  background-size: 32px 32px, 32px 32px, 100% 100%;
+    ),
+    url("/background/kasane-teto-windows-xp.jpg");
+  background-size: 100% 100%, 100% 100%, cover;
+  background-position: center top, center top, center top;
+  background-repeat: no-repeat, no-repeat, no-repeat;
   background-attachment: fixed;
 }
 
