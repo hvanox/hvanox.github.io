@@ -4,43 +4,17 @@ export const locales = ["ru", "en"] as const;
 export type Locale = (typeof locales)[number];
 
 export const dict = {
-  nav: {
-    about: { ru: "обо мне", en: "about" },
-    stack: { ru: "стек", en: "stack" },
-    achievements: { ru: "ачивки", en: "achievements" },
-    experience: { ru: "опыт", en: "experience" },
-    contact: { ru: "контакты", en: "contact" },
-  },
   header: {
     slogan: {
       ru: "серверы, сегфолты и 200 bpm",
       en: "servers, segfaults and 200 bpm",
     },
-    lang: { ru: "язык", en: "lang" },
-  },
-  sections: {
-    welcome: { ru: "добро пожаловать", en: "welcome" },
-    about: { ru: "обо мне", en: "about me" },
-    stack: { ru: "чем работаю", en: "what i work with" },
-    achievements: { ru: "достижения", en: "achievements" },
-    experience: { ru: "опыт", en: "experience" },
-    shrine: { ru: "алтарь тето", en: "teto shrine" },
-    contact: { ru: "связаться", en: "get in touch" },
-    updates: { ru: "обновления", en: "updates" },
-    nowPlaying: { ru: "сейчас играет", en: "now playing" },
-    guestbook: { ru: "гостевая", en: "guestbook" },
-    webring: { ru: "кольцо", en: "webring" },
-    nav: { ru: "навигация", en: "navigation" },
-    github: { ru: "гитхаб", en: "github" },
-  },
-  stackGroups: {
-    lang: { ru: "языки", en: "languages" },
-    data: { ru: "данные", en: "data" },
-    infra: { ru: "инфраструктура", en: "infrastructure" },
-    auth: { ru: "аутентификация", en: "auth" },
-    tools: { ru: "инструменты", en: "tools" },
   },
   about: {
+    short: {
+      ru: "14 лет, родился 19.11.2011. Компьютеры и всё вокруг них. Вокалоиды, поп, брейккор, найткор.",
+      en: "14, born 19.11.2011. Computers and everything around them. Vocaloid, pop, breakcore, nightcore.",
+    },
     body: {
       ru: "Привет! Эта вкладка «обо мне». Не знаю, что тут написать, так что коротко о себе: мне 14 лет, родился 19.11.2011. Увлекаюсь компьютерами и всем, что с ними связано. Из музыки нравятся вокалоиды, поп, брейккор, найткор, иногда могу послушать рэп. Ну и всё.",
       en: "Hi! This is the about tab. Not sure what to write here, so briefly about me: I'm 14, born 19.11.2011. Into computers and everything related. Music-wise I like vocaloids, pop, breakcore, nightcore, sometimes I can put on rap. That's about it.",
@@ -49,64 +23,101 @@ export const dict = {
       ru: "этот лендинг слегка вайбкод, потому что я не хочу во фронт, да и лень",
       en: "this landing is slightly vibe-coded, cause I don't wanna do frontend, plus I'm lazy",
     },
+    more: { ru: "читать целиком", en: "read all" },
+    title: { ru: "обо мне.txt", en: "about_me.txt" },
   },
-  shrine: {
-    intro: {
-      ru: "Касане Тето — UTAU-персонаж, потом Synthesizer V. Всё ниже — фанарты, автор подписан под каждым.",
-      en: "Kasane Teto — a UTAU character, later Synthesizer V. Everything below is fan art, artist credited under each.",
-    },
-    credit: { ru: "арт:", en: "art:" },
-    /** Осмысленный alt: перед именем автора подставляется в TetoArt/Shrine. */
-    artAlt: {
-      ru: "Фанарт Касане Тето, автор",
-      en: "Kasane Teto fan art by",
-    },
-    open: { ru: "Открыть арт целиком, автор", en: "Open full art by" },
+  profile: {
+    age: { ru: "Лет", en: "Age" },
+    born: { ru: "Рожд.", en: "Born" },
+    status: { ru: "Статус", en: "Status" },
+    alive: { ru: "Жив", en: "Alive" },
+    listening: { ru: "Слушает", en: "Listening" },
+    loading: { ru: "Загрузка", en: "Loading" },
+    days: { ru: "дней на Земле", en: "days on Earth" },
   },
-  contact: {
-    hint: {
-      ru: "Пишите в телеграм — отвечаю быстрее всего там.",
-      en: "Telegram is the fastest way to reach me.",
-    },
-    copy: { ru: "скопировать", en: "copy" },
-    copied: { ru: "скопировано", en: "copied" },
-  },
-  guestbook: {
-    stub: {
-      ru: "Гостевая книга требует сервер, а сайт статический. Пока — телеграм.",
-      en: "A guestbook needs a server and this site is static. Telegram for now.",
-    },
-  },
-  player: {
-    play: { ru: "играть", en: "play" },
-    pause: { ru: "пауза", en: "pause" },
-    stop: { ru: "стоп", en: "stop" },
-    silence: { ru: "трек не загружен", en: "no track loaded" },
-    trackUnplayable: { ru: "трек не играет", en: "track unavailable" },
-    tracklist: { ru: "плейлист", en: "playlist" },
-    lyrics: { ru: "текст песни", en: "lyrics" },
-    watchOnYoutube: { ru: "смотреть на youtube", en: "watch on youtube" },
-    unmute: { ru: "включи звук", en: "unmute" },
+  stack: {
+    title: { ru: "стек", en: "stack" },
+    open: { ru: "весь стек", en: "full stack list" },
+    lang: { ru: "языки", en: "lang" },
+    data: { ru: "данные", en: "data" },
+    infra: { ru: "инфра", en: "infra" },
+    auth: { ru: "авториз.", en: "auth" },
+    tools: { ru: "тулзы", en: "tools" },
   },
   github: {
-    repos: { ru: "публичных репо", en: "public repos" },
-    followers: { ru: "подписчиков", en: "followers" },
-    joined: { ru: "на гитхабе с", en: "on github since" },
-    unavailable: {
-      ru: "Статистика GitHub недоступна.",
-      en: "GitHub stats unavailable.",
-    },
+    repos: { ru: "репо", en: "repos" },
+    followers: { ru: "подписч.", en: "followers" },
+    since: { ru: "с", en: "since" },
+    open: { ru: "профиль на гитхабе", en: "github profile" },
+    unavailable: { ru: "гитхаб недоступен", en: "github unavailable" },
   },
-  footer: {
-    built: { ru: "собрано на", en: "built with" },
-    construction: { ru: "вечно в разработке", en: "eternally under construction" },
+  settings: {
+    lang: { ru: "Язык", en: "Language" },
+    motion: { ru: "Анимации", en: "Motion" },
+    on: { ru: "Вкл", en: "On" },
+    off: { ru: "Выкл", en: "Off" },
+  },
+  achievements: {
+    label: { ru: "Достижения", en: "Achievements" },
+    prev: { ru: "предыдущее", en: "previous" },
+    next: { ru: "следующее", en: "next" },
+  },
+  system: {
+    title: { ru: "Системное сообщение", en: "System Message" },
+    ok: { ru: "Ок", en: "Ok" },
+    cancel: { ru: "Отмена", en: "Cancel" },
+    expand: { ru: "Развернуть", en: "Expand" },
+  },
+  contact: {
+    telegram: { ru: "написать в телеграм", en: "message on telegram" },
+    copyEmail: { ru: "скопировать почту", en: "copy email" },
+    copied: { ru: "почта скопирована", en: "email copied" },
+    github: { ru: "гитхаб", en: "github" },
+  },
+  experience: {
+    prefix: { ru: "Документ:", en: "Document of" },
+    title: { ru: "документы опыта", en: "experience documents" },
+  },
+  shrine: {
+    title: { ru: "Виртуальная картина.", en: "Virtual Picture." },
+    menu: {
+      file: { ru: "Файл", en: "File" },
+      action: { ru: "Действие", en: "Action" },
+      help: { ru: "Помощь", en: "Help" },
+    },
+    next: { ru: "Дальше", en: "Next" },
+    prev: { ru: "Назад", en: "Prev" },
+    open: { ru: "открыть целиком", en: "open full size" },
+    random: { ru: "случайный арт", en: "random art" },
+    credit: { ru: "арт:", en: "art:" },
+    artAlt: { ru: "Фанарт Касане Тето, автор", en: "Kasane Teto fan art by" },
+  },
+  player: {
+    songs: { ru: "Песни", en: "Songs" },
+    open: { ru: "открыть плеер", en: "open player" },
+    play: { ru: "играть", en: "play" },
+    pause: { ru: "пауза", en: "pause" },
+    prev: { ru: "предыдущий трек", en: "previous track" },
+    next: { ru: "следующий трек", en: "next track" },
+    playlist: { ru: "плейлист", en: "playlist" },
+    like: { ru: "нравится", en: "like" },
+    watch: { ru: "открыть клип на youtube", en: "open video on youtube" },
+    progress: { ru: "прогресс трека", en: "track progress" },
+    volume: { ru: "громкость", en: "volume" },
+    track: { ru: "трек", en: "track" },
+    vol: { ru: "громк", en: "vol" },
+    unmute: { ru: "включи звук", en: "unmute" },
+    unplayable: { ru: "трек не играет", en: "track unavailable" },
+    close: { ru: "свернуть плеер", en: "minimize player" },
+  },
+  clock: {
+    label: { ru: "Местное время", en: "Local time" },
+    toggle: { ru: "переключить 12/24 часа", en: "toggle 12/24 hours" },
+  },
+  credit: {
+    edit: { ru: "эдит фона", en: "board edit by" },
   },
   a11y: {
-    reduceMotion: {
-      ru: "Анимации отключены системной настройкой.",
-      en: "Animations disabled by your system setting.",
-    },
-    skipToContent: { ru: "к содержимому", en: "skip to content" },
     close: { ru: "закрыть", en: "close" },
   },
 } as const;

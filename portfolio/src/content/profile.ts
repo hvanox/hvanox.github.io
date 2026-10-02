@@ -4,8 +4,6 @@ export const profile = {
   handle: "hvano",
   role: { ru: "backend-разработчик", en: "backend developer" },
   tetoName: "重音テト",
-  /** ISO-дата рождения: из неё считаются возраст и «дней на Земле». */
-  born: "2011-11-19",
   tagline: {
     ru: "пишу серверы, ломаю ритм",
     en: "i write servers, i break the beat",

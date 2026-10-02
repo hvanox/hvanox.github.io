@@ -7,7 +7,7 @@
  *  - `cn` импортируется из `@/lib/utils` (генератор поставил битый спецификатор "cn");
  *  - убран `@/components/ui/button` — этот компонент в проекте не ставился;
  *  - убраны утилиты `animate-in / fade-in-0` (пакет `tw-animate-css` не установлен);
- *  - `bg-background / border / ring` заменены на токены борда из `@theme`.
+ *  - `bg-background / border / ring` заменены на токены из `@theme`.
  */
 
 import * as React from "react";
@@ -37,7 +37,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
-      className={cn("fixed inset-0 z-60 bg-night/80 backdrop-blur-[2px]", className)}
+      className={cn("fixed inset-0 z-60 bg-void-deep/85", className)}
       {...props}
     />
   );
@@ -56,7 +56,7 @@ function DialogContent({
         className={cn(
           "fixed top-1/2 left-1/2 z-60 grid max-h-[92dvh] w-[min(92vw,880px)]",
           "-translate-x-1/2 -translate-y-1/2 overflow-y-auto",
-          "border-2 border-ink bg-paper p-0 text-ink shadow-[6px_6px_0_0_var(--color-night)] outline-none",
+          "border border-chrome bg-void-deep p-0 shadow-hard outline-none",
           className,
         )}
         {...props}
@@ -85,7 +85,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("font-sans text-sm text-ink", className)}
+      className={cn("font-pixel text-[11px] tracking-[0.08em] text-void-deep", className)}
       {...props}
     />
   );
@@ -98,7 +98,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-xs text-plum", className)}
+      className={cn("text-[10px] text-bone-dim", className)}
       {...props}
     />
   );
