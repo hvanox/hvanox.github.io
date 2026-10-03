@@ -119,5 +119,6 @@ export const dict = {
   },
   a11y: {
     close: { ru: "закрыть", en: "close" },
+    rotate: { ru: "поверни телефон горизонтально", en: "turn your phone sideways" },
   },
 } as const;

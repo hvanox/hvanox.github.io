@@ -1,0 +1,272 @@
+@import "tailwindcss";
+@import "@fontsource/arimo/latin-400.css";
+@import "@fontsource/arimo/latin-700.css";
+@import "@fontsource/arimo/latin-400-italic.css";
+@import "@fontsource/arimo/cyrillic-400.css";
+@import "@fontsource/arimo/cyrillic-700.css";
+@import "@fontsource/arimo/cyrillic-400-italic.css";
+@import "@fontsource/montserrat/latin-800.css";
+@import "@fontsource/montserrat/latin-900.css";
+@import "@fontsource/montserrat/latin-800-italic.css";
+@import "@fontsource/montserrat/latin-900-italic.css";
+@import "@fontsource/montserrat/cyrillic-800-italic.css";
+@import "@fontsource/montserrat/cyrillic-900.css";
+@import "@fontsource/great-vibes/latin-400.css";
+@import "@fontsource/great-vibes/cyrillic-400.css";
+@import "@fontsource/cousine/latin-400.css";
+@import "@fontsource/cousine/cyrillic-400.css";
+@import "@fontsource/zen-kaku-gothic-new/500.css";
+@import "@fontsource/zen-kaku-gothic-new/700.css";
+
+@theme {
+  --color-field: #a4434c;
+  --color-field-deep: #8a3640;
+  --color-maroon: #5a2832;
+  --color-ink: #3f1a20;
+  --color-cream: #c9c2c6;
+  --color-cream-hi: #e6e0e3;
+  --color-paper: #f4f0f1;
+  --color-shade: #8b8085;
+  --color-rose: #a9505a;
+  --color-rose-hi: #d98a91;
+
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font-sans: "Arimo", Arial, "Zen Kaku Gothic New", sans-serif;
+  --font-display: "Montserrat", "Arimo", sans-serif;
+  --font-script: "Great Vibes", cursive;
+  --font-mono: "Cousine", "Courier New", "Zen Kaku Gothic New", monospace;
+  --font-jp: "Zen Kaku Gothic New", "Arimo", sans-serif;
+}
+
+/*
+  Whole composition is measured in reference pixels (736 x 414).
+  --u is one reference pixel at the current render size.
+*/
+:root {
+  color-scheme: light;
+  background: var(--color-field);
+}
+
+html,
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-paper);
+  min-height: 100%;
+  background: var(--color-field);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-cream-hi);
+}
+
+* {
+  scrollbar-color: var(--color-maroon) var(--color-field-deep);
+}
+
+:focus-visible {
+  outline: calc(var(--u, 1px) * 1.5) solid var(--color-cream-hi);
+  outline-offset: calc(var(--u, 1px) * 1.5);
+}
+
+/* ---------- stage ---------- */
+
+/*
+  One board for every screen, always fitted into the window, so the document
+  never scrolls: body is pinned to the viewport and the page clips with
+  overflow:clip (not a scroll container, so focus, find-in-page or
+  scrollIntoView cannot scroll it either). Teto may hang below the board; the
+  window edge clips her, not the board edge.
+*/
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body {
+  position: fixed;
+  inset: 0;
+}
+
+.page {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100dvh;
+  overflow: hidden;
+  overflow: clip;
+}
+
+.stage {
+  container-type: inline-size;
+  position: relative;
+  width: 100%;
+  max-width: calc(100dvh * 736 / 414);
+}
+
+/*
+  Height: the reference 736:414, stretched up to 25% when the window is taller
+  than 16:9 so no empty band is left. Panels are placed in % of the height (they
+  spread a little) and sized in --u of the width (they keep their size).
+*/
+.canvas {
+  --u: calc(100cqw / 736);
+  --natural: calc(100cqw * 414 / 736);
+  position: relative;
+  width: 100%;
+  height: max(var(--natural), min(100dvh, calc(var(--natural) * 1.25)));
+}
+
+.slot {
+  position: absolute;
+}
+
+/* Portrait phone: the same board, plus a nudge to turn the phone sideways. */
+.rotate-hint {
+  display: none;
+}
+@media (orientation: portrait) and (max-width: 899px) {
+  .page {
+    grid-template-rows: auto auto;
+    align-content: center;
+    gap: 28px;
+  }
+  .rotate-hint {
+    display: flex;
+    grid-row: 1;
+  }
+  .stage {
+    grid-row: 2;
+  }
+  .canvas {
+    height: var(--natural);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rotate-hint-icon {
+    animation: tilt 2.6s var(--ease-snap) infinite;
+  }
+}
+@keyframes tilt {
+  0%, 35% { transform: rotate(0deg); }
+  65%, 100% { transform: rotate(-90deg); }
+}
+
+/* ---------- print texture ---------- */
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.12  0 0 0 0 0.15  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgb(74 27 34 / 0.35) 100%);
+}
+
+.barcode {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-ink) 0 calc(var(--u) * 0.8),
+    transparent calc(var(--u) * 0.8) calc(var(--u) * 1.6),
+    var(--color-ink) calc(var(--u) * 1.6) calc(var(--u) * 3.2),
+    transparent calc(var(--u) * 3.2) calc(var(--u) * 4)
+  );
+}
+
+/* white print dust over the whole window, bands around the board included */
+.dust {
+  position: fixed;
+  z-index: 38;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgb(244 240 241 / 0.8) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle, rgb(244 240 241 / 0.55) 0 0.5px, transparent 1px),
+    radial-gradient(circle, rgb(244 240 241 / 0.4) 0 0.7px, transparent 1.3px);
+  background-size: 173px 151px, 257px 211px, 389px 293px;
+  background-position: 0 0, 61px 97px, 133px 41px;
+}
+
+
+/* outlined display letters (KASANE TETO, monogram) */
+.stroke-letters {
+  color: var(--color-maroon);
+  -webkit-text-stroke: calc(var(--u) * 1.1) var(--color-paper);
+  paint-order: stroke fill;
+}
+
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(calc(var(--u) * 3)); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise 0.45s var(--ease-snap); }
+}
+
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* modal */
+dialog.modal {
+  /* Tailwind preflight zeroes margins; the native centring needs margin:auto */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  height: fit-content;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  /* room for the paper outline ring so scrolling never clips it */
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  color: var(--color-paper);
+  max-width: min(94vw, 520px);
+  width: 100%;
+}
+dialog.modal::backdrop {
+  background: rgb(63 26 32 / 0.55);
+  backdrop-filter: blur(3px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog.modal[open] { animation: rise 0.35s var(--ease-snap); }
+}
+
+/* idle life: Teto breathes, sparkles twinkle */
+@media (prefers-reduced-motion: no-preference) {
+  .teto-float {
+    animation: teto-float 6s ease-in-out infinite;
+  }
+  .twinkle {
+    animation: twinkle 3.2s ease-in-out infinite;
+  }
+}
+@keyframes teto-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(calc(var(--u) * -3)); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.35; transform: scale(0.6) rotate(45deg); }
+}

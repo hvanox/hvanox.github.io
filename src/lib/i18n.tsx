@@ -1,4 +1,3 @@
-"use client";
 
 /**
  * Двуязычность без роутинга: статический экспорт отдаёт один HTML,
@@ -14,7 +13,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { locales, type Locale } from "@/content/dict";
+import { locales, type Locale } from "../content/dict";
 
 const STORAGE_KEY = "hvano.locale";
 const DEFAULT_LOCALE: Locale = "en";
@@ -43,7 +42,19 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   // а рассинхрон разметки ломал бы гидрацию.
   // Синхронный setState здесь намеренный — подтягиваем внешнее состояние.
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    // ?lang=ru|en wins: shareable links open in the asked language.
+    const fromUrl = new URLSearchParams(window.location.search).get("lang");
+    if (isLocale(fromUrl)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocaleState(fromUrl);
+      return;
+    }
+    let stored: string | null = null;
+    try {
+      stored = window.localStorage.getItem(STORAGE_KEY);
+    } catch {
+      stored = null;
+    }
     if (isLocale(stored)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocaleState(stored);
@@ -59,7 +70,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // private mode: just don't remember
+    }
   }, []);
 
   const value = useMemo<I18nValue>(

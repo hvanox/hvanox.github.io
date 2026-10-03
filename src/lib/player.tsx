@@ -1,4 +1,3 @@
-"use client";
 
 /**
  * Плеер поверх официальных клипов YouTube (iframe API) + его общее состояние.
@@ -21,7 +20,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { playlist, type Track } from "@/content/playlist";
+import { playlist, type Track } from "../content/playlist";
 
 type YTPlayerInstance = {
   cueVideoById: (videoId: string) => void;
@@ -43,6 +42,9 @@ type YTApi = {
     el: HTMLElement,
     opts: {
       videoId: string;
+      width?: number;
+      height?: number;
+      host?: string;
       playerVars?: Record<string, string | number>;
       events?: {
         onReady?: () => void;
@@ -170,6 +172,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         if (cancelled || !hostRef.current) return;
         instance = new api.Player(hostRef.current, {
           videoId: playlist[indexRef.current].youtubeId,
+          // Exact size of the hidden host: a default 640x360 iframe spills
+          // past the viewport and some browsers count it as scrollable page.
+          width: 200,
+          height: 200,
+          // Privacy-enhanced mode: no YouTube cookies until a video plays.
+          host: "https://www.youtube-nocookie.com",
           playerVars: { rel: 0 },
           events: {
             onReady: () => {
@@ -324,9 +332,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   return (
     <PlayerContext.Provider value={value}>
       {children}
-      {/* Хост iframe: звук идёт отсюда. Держим 1×1 и прозрачным
+      {/* Хост iframe: звук идёт отсюда. 200×200 в углу экрана, прозрачный
           (display:none браузеры умеют глушить, opacity — нет). */}
-      <div aria-hidden="true" className="pointer-events-none fixed bottom-0 left-0 size-px overflow-hidden opacity-0">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed top-0 left-0 overflow-hidden opacity-0"
+        style={{ width: 200, height: 200, zIndex: -1, contain: "strict" }}
+      >
         <div ref={hostRef} />
       </div>
     </PlayerContext.Provider>
